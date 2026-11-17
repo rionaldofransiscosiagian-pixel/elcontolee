@@ -1,3 +1,11 @@
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker terdaftar!', reg))
+      .catch(err => console.log('Gagal daftar SW:', err));
+  });
+}
+
 const API_URL = "https://script.google.com/macros/s/AKfycby6HDy74_urEl7CLT5dNfaqqpqAmN1sHftd5qlFfxzZTxmZSjZqoyUcmdvFCDy8AGt_7A/exec";
 const IMGBB_API_KEY = "9af84f306754d5637a4026a11259dab3"; 
 
