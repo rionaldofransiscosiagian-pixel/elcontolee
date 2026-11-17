@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Danaku Pro - Financial Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin-custom { animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased min-h-screen pb-28">
+
+    <!-- ================= SECTION AUTHENTICATION (LOGIN, REGISTER, FORGOT OTP) ================= -->
+    <div id="section-auth" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-8 rounded-3xl shadow-2xl">
+            <div class="text-center mb-6">
+                <h1 id="auth-title" class="text-2xl font-extrabold text-cyan-400 tracking-wider">DANAKU PRO</h1>
+                <p id="auth-subtitle" class="text-xs text-slate-400 mt-1">Masuk ke pusat kendali keuangan Anda</p>
+            </div>
+
+            <!-- 1. Form Login -->
+            <form id="form-login" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">Username</label>
+                    <input type="text" id="login-user" required class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">Password</label>
+                    <input type="password" id="login-pass" required class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+                <button type="submit" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-cyan-950 flex items-center justify-center gap-2">
+                    <span class="btn-text">Masuk</span>
+                    <span class="loading-spinner hidden animate-spin-custom">🔄</span>
+                </button>
+                <div class="flex justify-between items-center text-[11px] pt-2">
+                    <button type="button" onclick="gantiModeAuth('register')" class="text-cyan-400 font-bold hover:underline">Daftar Akun Baru</button>
+                    <button type="button" onclick="gantiModeAuth('forgot')" class="text-slate-500 hover:underline">Lupa Sandi?</button>
+                </div>
+            </form>
+
+            <!-- 2. Form Register (OTP Gmail) -->
+            <form id="form-register" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">Username Baru</label>
+                    <input type="text" id="reg-user" required class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">Email Aktif (Untuk OTP)</label>
+                    <input type="email" id="reg-email" required class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">Password</label>
+                    <input type="password" id="reg-pass" required class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+                <div id="reg-otp-box" class="hidden">
+                    <label class="block text-xs font-bold text-emerald-400 mb-1">Kode OTP (Cek Inbox/Spam Email)</label>
+                    <input type="text" id="reg-otp" placeholder="6 digit kode OTP" class="w-full px-4 py-2.5 rounded-xl border border-emerald-500/50 bg-emerald-950/40 text-white text-xs focus:outline-none">
+                </div>
+                <button type="submit" id="btn-reg-submit" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2">
+                    <span class="btn-text">Kirim Kode OTP</span>
+                    <span class="loading-spinner hidden animate-spin-custom">🔄</span>
+                </button>
+                <div class="text-center text-[11px] pt-2">
+                    <button type="button" onclick="gantiModeAuth('login')" class="text-slate-400 font-bold hover:underline">← Kembali ke Login</button>
+                </div>
+            </form>
+
+            <!-- 3. Form Lupa Sandi (OTP Gmail) -->
+            <form id="form-forgot" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">Email Terdaftar</label>
+                    <input type="email" id="forgot-email" required class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+                <div id="forgot-reset-box" class="space-y-3 hidden">
+                    <div>
+                        <label class="block text-xs font-bold text-emerald-400 mb-1">Kode OTP Pemulihan</label>
+                        <input type="text" id="forgot-otp" placeholder="6 digit kode OTP" class="w-full px-4 py-2.5 rounded-xl border border-emerald-500/50 bg-emerald-950/40 text-white text-xs focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-1">Password Baru</label>
+                        <input type="password" id="forgot-newpass" placeholder="Masukkan sandi baru" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none">
+                    </div>
+                </div>
+                <button type="submit" id="btn-forgot-submit" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2">
+                    <span class="btn-text">Kirim OTP Pemulihan</span>
+                    <span class="loading-spinner hidden animate-spin-custom">🔄</span>
+                </button>
+                <div class="text-center text-[11px] pt-2">
+                    <button type="button" onclick="gantiModeAuth('login')" class="text-slate-400 font-bold hover:underline">← Kembali ke Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MAIN APP CONTENT ================= -->
+    <div id="app-content" class="hidden max-w-md mx-auto p-4 space-y-4">
+        
+        <!-- Header Profil & Kontrol -->
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl shadow-lg flex justify-between items-center">
+            <div>
+                <span id="badge-role" class="px-2 py-0.5 bg-cyan-950 text-cyan-400 text-[10px] font-extrabold rounded-md border border-cyan-800/50">USER</span>
+                <h2 id="teks-user-aktif" class="text-sm font-extrabold text-white mt-1">Username</h2>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="toggleAntiIntip()" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs" title="Anti-Intip Saldo">👁️</button>
+                <button id="btn-relog" onclick="relogData()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1" title="Refresh Data">
+                    <span class="relog-icon">🔄</span>
+                    <span class="relog-text">Relog</span>
+                </button>
+                <button onclick="logout()" class="px-3 py-2 bg-rose-950/60 text-rose-400 border border-rose-900/50 hover:bg-rose-900/60 rounded-xl text-xs font-bold" title="Keluar Akun">Logout</button>
+            </div>
+        </div>
+
+        <!-- Kartu Saldo Utama (Futuristis & Multi-Currency) -->
+        <div class="bg-slate-900 border border-slate-800 backdrop-blur-md rounded-3xl p-5 shadow-2xl relative overflow-hidden space-y-3">
+            <div class="absolute -right-10 -top-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+            
+            <div class="flex justify-between items-center relative z-10">
+                <p class="text-[10px] tracking-widest uppercase text-cyan-400 font-extrabold">SYSTEM BALANCE</p>
+                <select id="filter-mata-uang-saldo" onchange="updateTampilanSaldo()" class="text-[10px] bg-slate-800 border border-slate-700 px-2 py-1 rounded-full font-semibold outline-none text-cyan-300">
+                    <option value="IDR" class="bg-slate-900 text-white">IDR</option>
+                    <option value="USD" class="bg-slate-900 text-white">USD</option>
+                    <option value="RINGGIT" class="bg-slate-900 text-white">RINGGIT</option>
+                    <option value="KHMR" class="bg-slate-900 text-white">KHMR</option>
+                    <option value="BAHT" class="bg-slate-900 text-white">BAHT</option>
+                    <option value="AMD" class="bg-slate-900 text-white">AMD</option>
+                </select>
+            </div>
+            
+            <h2 id="total-saldo" class="text-2xl font-black text-white relative z-10">Rp 0</h2>
+
+            <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800 relative z-10">
+                <div>
+                    <p class="text-[10px] text-slate-400 uppercase">Pemasukan</p>
+                    <p id="total-pemasukan" class="text-xs font-bold text-emerald-400">Rp 0</p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-400 uppercase">Pengeluaran</p>
+                    <p id="total-pengeluaran" class="text-xs font-bold text-rose-400">Rp 0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB SECTIONS ================= -->
+
+        <!-- 1. BERANDA (Form Transaksi Biasa) -->
+        <section id="content-beranda" class="tab-content active space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-lg space-y-4">
+                <h3 class="text-xs font-extrabold text-cyan-400">➕ Tambah Transaksi Baru</h3>
+                <form id="form-transaksi" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Tipe</label>
+                            <select id="tr-tipe" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                                <option value="pemasukan">Pemasukan</option>
+                                <option value="pengeluaran">Pengeluaran</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Mata Uang</label>
+                            <select id="tr-mata-uang" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                                <option value="IDR">IDR</option>
+                                <option value="USD">USD</option>
+                                <option value="RINGGIT">RINGGIT</option>
+                                <option value="KHMR">KHMR</option>
+                                <option value="BAHT">BAHT</option>
+                                <option value="AMD">AMD</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Keterangan</label>
+                        <input type="text" id="tr-keterangan" required placeholder="Contoh: Gaji Bulanan / Belanja" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Jumlah</label>
+                            <input type="text" inputmode="numeric" id="tr-jumlah" oninput="formatInputRibuan(this)" required placeholder="0" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white font-semibold focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Tanggal</label>
+                            <input type="date" id="tr-tanggal" required class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Bukti Struk / Foto (Opsional)</label>
+                        <input type="file" id="tr-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cyan-950 file:text-cyan-400 hover:file:bg-cyan-900">
+                    </div>
+                    <button type="submit" id="btn-submit-transaksi" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-950">
+                        <span class="btn-text">Simpan Transaksi</span>
+                        <span class="loading-spinner hidden animate-spin-custom">🔄</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 2. HISTORY GLOBAL -->
+        <section id="content-history" class="tab-content space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl space-y-3 shadow-lg">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-extrabold text-cyan-400">📋 History Semua Transaksi</h3>
+                    <select id="filter-mata-uang-history" onchange="muatHistoryGlobal()" class="text-[10px] bg-slate-800 border border-slate-700 px-2 py-1 rounded-full font-semibold outline-none text-cyan-300">
+                        <option value="SEMUA">SEMUA</option>
+                        <option value="IDR">IDR</option>
+                        <option value="USD">USD</option>
+                        <option value="RINGGIT">RINGGIT</option>
+                        <option value="KHMR">KHMR</option>
+                        <option value="BAHT">BAHT</option>
+                        <option value="AMD">AMD</option>
+                    </select>
+                </div>
+                <div id="list-history-global" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- 3. HUTANG & PIUTANG -->
+        <section id="content-hutangpiutang" class="tab-content space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-lg space-y-4">
+                <h3 class="text-xs font-extrabold text-cyan-400">💸 Catat Hutang / Piutang</h3>
+                <form id="form-hutangpiutang" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Jenis</label>
+                            <select id="hp-jenis" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                                <option value="hutang">Hutang (Saya Berhutang)</option>
+                                <option value="piutang">Piutang (Orang Berhutang)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Mata Uang</label>
+                            <select id="hp-mata-uang" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                                <option value="IDR">IDR</option>
+                                <option value="USD">USD</option>
+                                <option value="RINGGIT">RINGGIT</option>
+                                <option value="KHMR">KHMR</option>
+                                <option value="BAHT">BAHT</option>
+                                <option value="AMD">AMD</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Nama Pihak Terkait</label>
+                        <input type="text" id="hp-nama" required placeholder="Contoh: Budi / Teman Kantor" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Jumlah</label>
+                            <input type="text" inputmode="numeric" id="hp-jumlah" oninput="formatInputRibuan(this)" required placeholder="0" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white font-semibold focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Jatuh Tempo</label>
+                            <input type="date" id="hp-tanggal" required class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Bukti Foto / Struk (Opsional)</label>
+                        <input type="file" id="hp-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-950 file:text-emerald-400 hover:file:bg-emerald-900">
+                    </div>
+                    <button type="submit" id="btn-submit-hp" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950">
+                        <span class="btn-text">Simpan Catatan</span>
+                        <span class="loading-spinner hidden animate-spin-custom">🔄</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-lg space-y-3">
+                <h3 class="text-xs font-extrabold text-cyan-400">📋 Daftar Hutang & Piutang Aktif</h3>
+                <div id="list-hutangpiutang-aktif" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- 4. TARGET (WISHLIST) -->
+        <section id="content-target" class="tab-content space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-lg space-y-4">
+                <h3 class="text-xs font-extrabold text-cyan-400">🎯 Tambah Target Tabungan</h3>
+                <form id="form-target" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Nama Target</label>
+                            <input type="text" id="wl-nama" required placeholder="Contoh: Beli Laptop / Liburan" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Mata Uang</label>
+                            <select id="wl-mata-uang" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                                <option value="IDR">IDR</option>
+                                <option value="USD">USD</option>
+                                <option value="RINGGIT">RINGGIT</option>
+                                <option value="KHMR">KHMR</option>
+                                <option value="BAHT">BAHT</option>
+                                <option value="AMD">AMD</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Nominal Target</label>
+                            <input type="text" inputmode="numeric" id="wl-target" oninput="formatInputRibuan(this)" required placeholder="0" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white font-semibold focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Sudah Terkumpul</label>
+                            <input type="text" inputmode="numeric" id="wl-terkumpul" oninput="formatInputRibuan(this)" required placeholder="0" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white font-semibold focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Foto Barang / Target (Opsional)</label>
+                        <input type="file" id="wl-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-950 file:text-amber-400 hover:file:bg-amber-900">
+                    </div>
+                    <button type="submit" id="btn-submit-target" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-amber-950">
+                        <span class="btn-text">Simpan Target</span>
+                        <span class="loading-spinner hidden animate-spin-custom">🔄</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-lg space-y-3">
+                <h3 class="text-xs font-extrabold text-cyan-400">🏆 Daftar Target Saya</h3>
+                <div id="list-target-aktif" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- 5. TAGIHAN -->
+        <section id="content-tagihan" class="tab-content space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-lg space-y-4">
+                <h3 class="text-xs font-extrabold text-cyan-400">🔔 Catat Tagihan Rutin</h3>
+                <form id="form-tagihan" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Nama Tagihan</label>
+                            <input type="text" id="tg-nama" required placeholder="Contoh: WiFi IndiHome / Listrik" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Mata Uang</label>
+                            <select id="tg-mata-uang" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                                <option value="IDR">IDR</option>
+                                <option value="USD">USD</option>
+                                <option value="RINGGIT">RINGGIT</option>
+                                <option value="KHMR">KHMR</option>
+                                <option value="BAHT">BAHT</option>
+                                <option value="AMD">AMD</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Jumlah Tagihan</label>
+                            <input type="text" inputmode="numeric" id="tg-jumlah" oninput="formatInputRibuan(this)" required placeholder="0" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white font-semibold focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Jatuh Tempo</label>
+                            <input type="date" id="tg-tanggal" required class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Bukti Tagihan / Struk (Opsional)</label>
+                        <input type="file" id="tg-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-rose-950 file:text-rose-400 hover:file:bg-rose-900">
+                    </div>
+                    <button type="submit" id="btn-submit-tagihan" class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-rose-950">
+                        <span class="btn-text">Simpan Tagihan</span>
+                        <span class="loading-spinner hidden animate-spin-custom">🔄</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-lg space-y-3">
+                <h3 class="text-xs font-extrabold text-cyan-400">📅 Daftar Tagihan Aktif</h3>
+                <div id="list-tagihan-aktif" class="space-y-2"></div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ================= BOTTOM NAVIGATION BAR ================= -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/90 backdrop-blur-lg border-t border-slate-800 px-4 py-2 flex justify-around items-center z-40 shadow-2xl">
+        <button onclick="gantiTab('beranda')" id="nav-beranda" class="flex flex-col items-center text-cyan-400 space-y-0.5 transition font-extrabold text-[10px]">
+            <span class="text-lg">🏠</span>
+            <span>Beranda</span>
+        </button>
+        <button onclick="gantiTab('history')" id="nav-history" class="flex flex-col items-center text-slate-400 hover:text-slate-200 space-y-0.5 transition text-[10px]">
+            <span class="text-lg">📋</span>
+            <span>History</span>
+        </button>
+        <button onclick="gantiTab('hutangpiutang')" id="nav-hutangpiutang" class="flex flex-col items-center text-slate-400 hover:text-slate-200 space-y-0.5 transition text-[10px]">
+            <span class="text-lg">⚖️</span>
+            <span>Hutang-Piutang</span>
+        </button>
+        <button onclick="gantiTab('target')" id="nav-target" class="flex flex-col items-center text-slate-400 hover:text-slate-200 space-y-0.5 transition text-[10px]">
+            <span class="text-lg">🎯</span>
+            <span>Target</span>
+        </button>
+        <button onclick="gantiTab('tagihan')" id="nav-tagihan" class="flex flex-col items-center text-slate-400 hover:text-slate-200 space-y-0.5 transition text-[10px]">
+            <span class="text-lg">🔔</span>
+            <span>Tagihan</span>
+        </button>
+    </div>
+
+    <!-- MODAL PREVIEW BUKTI -->
+    <div id="modal-bukti" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4 max-w-sm w-full space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h4 class="text-xs font-extrabold text-cyan-400">Preview Bukti / Struk</h4>
+                <button onclick="tutupModalBukti()" class="p-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold px-2 text-white">✕</button>
+            </div>
+            <div class="bg-slate-950 rounded-2xl p-2 flex justify-center items-center overflow-hidden max-h-96 border border-slate-800">
+                <img id="img-bukti-preview" src="" alt="Bukti" class="rounded-xl object-contain max-h-80">
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT UNIVERSAL -->
+    <div id="modal-edit" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h4 id="edit-modal-title" class="text-xs font-extrabold text-cyan-400">✏️ Edit Data</h4>
+                <button type="button" onclick="tutupModalEdit()" class="p-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold px-2 text-white">✕</button>
+            </div>
+            <form id="form-edit-universal" class="space-y-3">
+                <input type="hidden" id="edit-sheet">
+                <input type="hidden" id="edit-rowIndex">
+                <input type="hidden" id="edit-username">
+                <input type="hidden" id="edit-buktiUrl">
+
+                <!-- Field Tipe (Khusus TRANSAKSI) -->
+                <div id="edit-group-tipe" class="hidden">
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1">Tipe Transaksi</label>
+                    <select id="edit-tipe" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                        <option value="pemasukan">Pemasukan</option>
+                        <option value="pengeluaran">Pengeluaran</option>
+                    </select>
+                </div>
+
+                <!-- Field Mata Uang (Semua Sheet) -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1">Mata Uang</label>
+                    <select id="edit-mata-uang" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                        <option value="IDR">IDR</option>
+                        <option value="USD">USD</option>
+                        <option value="RINGGIT">RINGGIT</option>
+                        <option value="KHMR">KHMR</option>
+                        <option value="BAHT">BAHT</option>
+                        <option value="AMD">AMD</option>
+                    </select>
+                </div>
+
+                <!-- Field Keterangan / Nama (Semua Sheet) -->
+                <div>
+                    <label id="edit-label-nama" class="block text-[10px] font-bold text-slate-400 mb-1">Keterangan / Nama</label>
+                    <input type="text" id="edit-nama" required class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                </div>
+
+                <!-- Field Jumlah & Tanggal (TRANSAKSI, Hutang, Piutang, Tagihan) -->
+                <div id="edit-group-jumlah-tgl" class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Jumlah</label>
+                        <input type="text" inputmode="numeric" id="edit-jumlah" oninput="formatInputRibuan(this)" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white font-semibold focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Tanggal / Tempo</label>
+                        <input type="date" id="edit-tanggal" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Field Target & Terkumpul (Khusus Wishlist / Target) -->
+                <div id="edit-group-wishlist" class="grid grid-cols-2 gap-2 hidden">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Nominal Target</label>
+                        <input type="text" inputmode="numeric" id="edit-target" oninput="formatInputRibuan(this)" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white font-semibold focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Sudah Terkumpul</label>
+                        <input type="text" inputmode="numeric" id="edit-terkumpul" oninput="formatInputRibuan(this)" class="w-full p-2.5 rounded-xl border border-slate-800 text-xs bg-slate-950 text-white font-semibold focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Field Ganti Bukti Struk (Opsional) -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1">Ganti Bukti Foto (Kosongkan jika tetap)</label>
+                    <input type="file" id="edit-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cyan-950 file:text-cyan-400">
+                </div>
+
+                <button type="submit" id="btn-submit-edit" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-950">
+                    <span class="btn-text">Simpan Perubahan</span>
+                    <span class="loading-spinner hidden animate-spin-custom">🔄</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Banner Tombol Update Instan -->
+    <div id="banner-update-app" class="hidden fixed top-4 left-4 right-4 max-w-md mx-auto bg-cyan-600 text-white p-3 rounded-2xl shadow-2xl z-50 flex justify-between items-center border border-cyan-400 animate-bounce">
+        <div class="flex items-center gap-2">
+            <span>🚀</span>
+            <span class="text-xs font-bold">Versi baru Danaku Pro tersedia!</span>
+        </div>
+        <button onclick="jalankanUpdateApp()" class="px-3 py-1.5 bg-slate-950 text-cyan-400 font-extrabold rounded-xl text-[11px] hover:bg-slate-900 transition shadow">
+            Update Sekarang
+        </button>
+    </div>
+
+    <!-- Script Utama & Service Worker Register -->
+    <script src="app.js?v=1.1.3"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('ServiceWorker registered: ', registration.scope);
+
+              registration.onupdatefound = () => {
+                const installingWorker = registration.installing;
+                installingWorker.onstatechange = () => {
+                  if (installingWorker.state === 'installed') {
+                    if (navigator.serviceWorker.controller) {
+                      tampilkanTombolUpdateBaru();
+                    }
+                  }
+                };
+              };
+            })
+            .catch((error) => {
+              console.log('ServiceWorker registration failed: ', error);
+            });
+        });
+      }
+
+      function tampilkanTombolUpdateBaru() {
+        const updateBanner = document.getElementById('banner-update-app');
+        if (updateBanner) updateBanner.classList.remove('hidden');
+      }
+
+      function jalankanUpdateApp() {
+        window.location.reload();
+      }
+    </script>
+</body>
+</html>
