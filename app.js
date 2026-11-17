@@ -255,8 +255,8 @@ function gantiModeAuth(mode) {
 
     if (mode === 'login') {
         document.getElementById('form-login').classList.remove('hidden');
-        title.innerText = "DANAKU PRO";
-        sub.innerText = "Masuk ke pusat kendali keuangan Anda";
+        title.innerText = "CELENGAN";
+        sub.innerText = "Silahkan Log in";
     } else if (mode === 'register') {
         document.getElementById('form-register').classList.remove('hidden');
         title.innerText = "DAFTAR AKUN";
